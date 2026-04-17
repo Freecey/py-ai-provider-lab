@@ -1,3 +1,5 @@
+from typing import Optional
+
 from app.models.credential import Credential
 from .openai_compat import OpenAICompatProvider
 
@@ -7,9 +9,10 @@ _OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 class OpenRouterProvider(OpenAICompatProvider):
     slug = "openrouter"
 
-    def __init__(self, timeout: int = 30, retry_count: int = 3, proxy=None):
-        super().__init__(base_url=_OPENROUTER_BASE, timeout=timeout,
-                         retry_count=retry_count, proxy=proxy)
+    def __init__(self, timeout: int = 30, retry_count: int = 3,
+                 proxy=None, base_url: Optional[str] = None):
+        super().__init__(base_url=base_url or _OPENROUTER_BASE,
+                         timeout=timeout, retry_count=retry_count, proxy=proxy)
 
     def _headers(self, credentials: Credential) -> dict:
         headers = super()._headers(credentials)

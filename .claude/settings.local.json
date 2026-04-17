@@ -25,7 +25,8 @@
       "Bash(python3 -m py_compile /home/coder/cedric/.openclaw/workspace/projects/py-ai-provider-lab/app/ui/views/testlab.py)",
       "Bash(python -m py_compile app/ui/views/testlab.py)",
       "Bash(mkdir -p /home/coder/cedric/.openclaw/workspace/skills/py-ai-provider-lab)",
-      "Bash(cp /home/coder/cedric/.openclaw/workspace/projects/py-ai-provider-lab/skill/py-ai-provider-lab/SKILL.md /home/coder/cedric/.openclaw/workspace/skills/py-ai-provider-lab/SKILL.md)"
+      "Bash(cp /home/coder/cedric/.openclaw/workspace/projects/py-ai-provider-lab/skill/py-ai-provider-lab/SKILL.md /home/coder/cedric/.openclaw/workspace/skills/py-ai-provider-lab/SKILL.md)",
+      "WebSearch"
     ]
   }
 }

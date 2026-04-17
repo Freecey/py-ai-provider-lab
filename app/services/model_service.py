@@ -6,7 +6,7 @@ from app.storage.db import get_conn
 from app.storage.repositories.model_repo import ModelRepository
 from app.storage.repositories.credential_repo import CredentialRepository
 from app.storage.repositories.provider_repo import ProviderRepository
-from app.providers import get_provider_class
+from app.providers import build_adapter
 from app.utils.logger import get_logger
 
 logger = get_logger("service.model")
@@ -51,11 +51,8 @@ class ModelService:
         credential = self._c_repo.get_by_id(credential_id)
         if not provider or not credential:
             return SyncResult(errors=["Provider or credential not found"])
-        cls = get_provider_class(provider.slug)
-        if not cls:
-            return SyncResult(errors=[f"No adapter for '{provider.slug}'"])
         try:
-            adapter = cls(timeout=provider.timeout_global, proxy=provider.proxy or None)
+            adapter = build_adapter(provider)
             remote_models = adapter.list_models(credential)
         except Exception as e:
             return SyncResult(errors=[str(e)])

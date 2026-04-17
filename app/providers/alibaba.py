@@ -1,16 +1,20 @@
+from typing import Optional
+
 from app.models.credential import Credential
 from .openai_compat import OpenAICompatProvider
 
-_DASHSCOPE_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+_DASHSCOPE_INTL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+_DASHSCOPE_CN = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 
 class AlibabaProvider(OpenAICompatProvider):
     """Alibaba Cloud DashScope — OpenAI-compatible mode."""
     slug = "alibaba"
 
-    def __init__(self, timeout: int = 60, retry_count: int = 3, proxy=None):
-        super().__init__(base_url=_DASHSCOPE_BASE, timeout=timeout,
-                         retry_count=retry_count, proxy=proxy)
+    def __init__(self, timeout: int = 60, retry_count: int = 3,
+                 proxy=None, base_url: Optional[str] = None):
+        super().__init__(base_url=base_url or _DASHSCOPE_INTL,
+                         timeout=timeout, retry_count=retry_count, proxy=proxy)
 
     def normalize_capabilities(self, raw: dict) -> list[str]:
         caps = ["chat", "streaming"]

@@ -6,7 +6,7 @@ from app.models.results import ConnectionResult
 from app.storage.db import get_conn
 from app.storage.repositories.credential_repo import CredentialRepository
 from app.storage.repositories.provider_repo import ProviderRepository
-from app.providers import get_provider_class
+from app.providers import build_adapter
 from app.utils.logger import get_logger
 
 logger = get_logger("service.credential")
@@ -56,11 +56,8 @@ class CredentialService:
         provider = self._p_repo.get_by_id(c.provider_id)
         if not provider:
             return ConnectionResult(success=False, message="Provider introuvable")
-        cls = get_provider_class(provider.slug)
-        if not cls:
-            return ConnectionResult(success=False, message=f"Pas d'adaptateur pour '{provider.slug}'")
         try:
-            adapter = cls(timeout=provider.timeout_global, proxy=provider.proxy or None)
+            adapter = build_adapter(provider)
             result = adapter.test_connection(c)
             self._repo.update_validity(credential_id, "ok" if result.success else "invalid")
             return result

@@ -6,7 +6,7 @@ from app.models.results import HealthStatus
 from app.storage.db import get_conn
 from app.storage.repositories.provider_repo import ProviderRepository
 from app.storage.repositories.credential_repo import CredentialRepository
-from app.providers import get_provider_class
+from app.providers import build_adapter
 from app.utils.logger import get_logger
 
 logger = get_logger("service.provider")
@@ -51,12 +51,8 @@ class ProviderService:
         if not provider or not credential:
             return HealthStatus(provider_id=provider_id, status="untested",
                                 message="Provider or credential not found")
-        cls = get_provider_class(provider.slug)
-        if not cls:
-            return HealthStatus(provider_id=provider_id, status="untested",
-                                message=f"No adapter for slug '{provider.slug}'")
         try:
-            adapter = cls(timeout=provider.timeout_global, proxy=provider.proxy or None)
+            adapter = build_adapter(provider)
             result = adapter.test_connection(credential)
             status = "ok" if result.success else "endpoint_ko"
             if not result.success and "auth" in result.message.lower():

@@ -3,18 +3,22 @@ Z.ai provider adapter.
 [PARTIEL] — Documentation partielle au moment de l'implémentation.
 Basé sur une API compatible OpenAI.
 """
+from typing import Optional
+
 from app.models.credential import Credential
 from app.models.results import ConnectionResult
 from .openai_compat import OpenAICompatProvider
 
-_ZAI_BASE = "https://api.z.ai/v1"
+_ZAI_BASE = "https://api.z.ai/api/paas/v4"
 
 
 class ZaiProvider(OpenAICompatProvider):
     slug = "zai"
 
-    def __init__(self, timeout: int = 30, retry_count: int = 3, proxy=None):
-        super().__init__(base_url=_ZAI_BASE, timeout=timeout, retry_count=retry_count, proxy=proxy)
+    def __init__(self, timeout: int = 30, retry_count: int = 3,
+                 proxy=None, base_url: Optional[str] = None):
+        super().__init__(base_url=base_url or _ZAI_BASE,
+                         timeout=timeout, retry_count=retry_count, proxy=proxy)
 
     def test_connection(self, credentials: Credential) -> ConnectionResult:
         result = super().test_connection(credentials)

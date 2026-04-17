@@ -12,7 +12,7 @@ from app.storage.repositories.async_task_repo import AsyncTaskRepository
 from app.storage.repositories.credential_repo import CredentialRepository
 from app.storage.repositories.model_repo import ModelRepository
 from app.storage.repositories.provider_repo import ProviderRepository
-from app.providers import get_provider_class
+from app.providers import get_provider_class, build_adapter
 from app.utils.logger import get_logger
 
 logger = get_logger("service.test")
@@ -35,10 +35,7 @@ class TestService:
         provider = self._prov_repo.get_by_id(model.provider_id)
         if not provider:
             raise ValueError("Provider not found for model")
-        cls = get_provider_class(provider.slug)
-        if not cls:
-            raise ValueError(f"No adapter registered for '{provider.slug}'")
-        adapter = cls(timeout=provider.timeout_global, proxy=provider.proxy or None)
+        adapter = build_adapter(provider)
         return cred, model, provider, adapter
 
     def _create_run(self, credential_id, model_id, provider_id, modality, params) -> TestRun:
@@ -186,8 +183,7 @@ class TestService:
         cred = self._cred_repo.get_by_id(run.credential_id)
         model = self._model_repo.get_by_id(run.model_id)
         provider = self._prov_repo.get_by_id(run.provider_id)
-        cls = get_provider_class(provider.slug)
-        adapter = cls(timeout=provider.timeout_global, proxy=provider.proxy or None)
+        adapter = build_adapter(provider)
         task_ref = AsyncTaskRef(provider_task_id=task.provider_task_id,
                                 poll_interval_s=task.poll_interval_s)
         status = adapter.poll_task(cred, task_ref)
