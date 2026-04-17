@@ -16,27 +16,52 @@ _PROVIDERS = [
              notes="Sandbox provider — no real API calls"),
     Provider(name="OpenAI", slug="openai", active=True,
              base_url="https://api.openai.com/v1", auth_type="api_key",
-             endpoints={"text": "/chat/completions", "image": "/images/generations", "audio": "/audio"}),
+             endpoints={"text": "/chat/completions", "image": "/images/generations", "audio": "/audio"},
+             extra_fields={"credential_hints": {
+                 "api_key": "OPENAI_API_KEY",
+                 "org_id": "OPENAI_ORG_ID",
+                 "project_id": "OPENAI_PROJECT_ID",
+             }}),
     Provider(name="Anthropic", slug="anthropic", active=True,
              base_url="https://api.anthropic.com", auth_type="api_key",
              endpoints={"text": "/v1/messages"},
-             notes="Auth header: x-api-key (not Bearer)"),
+             notes="Auth header: x-api-key (not Bearer)",
+             extra_fields={"credential_hints": {
+                 "api_key": "ANTHROPIC_API_KEY",
+             }}),
     Provider(name="OpenRouter", slug="openrouter", active=True,
              base_url="https://openrouter.ai/api/v1", auth_type="api_key",
-             endpoints={"text": "/chat/completions"}),
+             endpoints={"text": "/chat/completions"},
+             extra_fields={"credential_hints": {
+                 "api_key": "OPENROUTER_API_KEY",
+             }}),
     Provider(name="Alibaba DashScope (International)", slug="alibaba", active=True,
              base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
              auth_type="api_key",
-             notes="OpenAI-compatible. CN: https://dashscope.aliyuncs.com/compatible-mode/v1"),
+             notes="OpenAI-compatible. CN: https://dashscope.aliyuncs.com/compatible-mode/v1",
+             extra_fields={"credential_hints": {
+                 "api_key": "DASHSCOPE_API_KEY",
+             }}),
     Provider(name="MiniMax (Global)", slug="minimax", active=True,
              base_url="https://api.minimax.io/v1", auth_type="api_key",
-             notes="GroupId required — store it in the 'Organisation ID' field of your credential"),
+             notes="GroupId required — store it in the 'Organisation ID' field of your credential",
+             extra_fields={"credential_hints": {
+                 "api_key": "MINIMAX_API_KEY",
+                 "org_id": "MINIMAX_GROUP_ID",
+             }}),
     Provider(name="MiniMax (CN)", slug="minimax_cn", active=False,
              base_url="https://api.minimax.chat/v1", auth_type="api_key",
-             notes="China endpoint. GroupId required — store it in 'Organisation ID' of your credential"),
+             notes="China endpoint. GroupId required — store it in 'Organisation ID' of your credential",
+             extra_fields={"credential_hints": {
+                 "api_key": "MINIMAX_API_KEY",
+                 "org_id": "MINIMAX_GROUP_ID",
+             }}),
     Provider(name="Z.ai (GLM)", slug="zai", active=True,
              base_url="https://api.z.ai/api/paas/v4", auth_type="api_key",
-             notes="[PARTIEL] — API key format: {API_Key_ID}.{secret}"),
+             notes="[PARTIEL] — API key format: {API_Key_ID}.{secret}",
+             extra_fields={"credential_hints": {
+                 "api_key": "ZAI_API_KEY",
+             }}),
 ]
 
 _MODELS = {
@@ -162,7 +187,15 @@ def seed(force: bool = False) -> None:
     provider_map: dict = {}
     for p_data in _PROVIDERS:
         existing_p = p_repo.get_by_slug(p_data.slug)
-        p = existing_p if existing_p else p_repo.create(p_data)
+        if existing_p:
+            # Always sync credential_hints so the UI can load env vars
+            hints = p_data.extra_fields.get("credential_hints")
+            if hints and existing_p.extra_fields.get("credential_hints") != hints:
+                existing_p.extra_fields = {**existing_p.extra_fields, "credential_hints": hints}
+                p_repo.update(existing_p)
+            p = existing_p
+        else:
+            p = p_repo.create(p_data)
         provider_map[p_data.slug] = p
 
     # Seed default credentials from environment variables (only if env var is set)

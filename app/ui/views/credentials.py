@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -110,6 +111,38 @@ class _CredentialForm(tk.Toplevel):
         self._on_save = on_save
         self._build()
 
+    def _get_hints(self) -> dict:
+        """Return credential_hints dict from the selected provider's extra_fields."""
+        name = self._provider_var.get()
+        p = next((p for p in self._providers if p.name == name), None)
+        if p:
+            return (p.extra_fields or {}).get("credential_hints", {})
+        return {}
+
+    def _load_from_env(self) -> None:
+        """Fill empty fields from environment variables using provider hints."""
+        hints = self._get_hints()
+        for field, env_var in hints.items():
+            value = os.environ.get(env_var, "")
+            if not value:
+                continue
+            if field == "api_key" and not self._api_key_field.get():
+                self._api_key_field.set(value)
+            elif field == "bearer_token" and not self._bearer_field.get():
+                self._bearer_field.set(value)
+            elif field in self._vars and not self._vars[field].get():
+                self._vars[field].set(value)
+
+    def _on_provider_selected(self, _event=None) -> None:
+        if not self._credential:
+            self._load_from_env()
+        self._update_env_hint()
+
+    def _update_env_hint(self) -> None:
+        hints = self._get_hints()
+        names = [f"${v}" for v in hints.values() if os.environ.get(v)]
+        self._env_hint_var.set(f"Env: {', '.join(names)}" if names else "")
+
     def _build(self) -> None:
         notebook = ttk.Notebook(self)
         notebook.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
@@ -129,6 +162,11 @@ class _CredentialForm(tk.Toplevel):
         self._provider_cb = ttk.Combobox(row, textvariable=self._provider_var,
                                           values=provider_names, state="readonly", width=28)
         self._provider_cb.pack(side=tk.LEFT)
+        self._provider_cb.bind("<<ComboboxSelected>>", self._on_provider_selected)
+
+        self._env_hint_var = tk.StringVar(value="")
+        ttk.Label(basic, textvariable=self._env_hint_var, foreground="gray",
+                  font=("", 8)).pack(anchor="w", pady=(0, 4))
 
         for label, key in [("Nom", "name"), ("Org ID", "org_id"), ("Project ID", "project_id"), ("Notes", "notes")]:
             r = ttk.Frame(basic); r.pack(fill=tk.X, pady=2)
@@ -152,6 +190,9 @@ class _CredentialForm(tk.Toplevel):
 
         self._active_var = tk.BooleanVar(value=getattr(self._credential, "active", True))
         ttk.Checkbutton(basic, text="Actif", variable=self._active_var).pack(anchor="w", pady=4)
+
+        if self._credential:
+            self._update_env_hint()
 
         # OAuth2 tab
         oauth = ttk.Frame(notebook, padding=12)
