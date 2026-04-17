@@ -180,6 +180,16 @@ def seed(force: bool = False) -> None:
     m_repo = ModelRepository(conn)
     t_repo = PromptTemplateRepository(conn)
 
+    # Always sync credential_hints (non-destructive, runs every startup)
+    for p_data in _PROVIDERS:
+        existing_p = p_repo.get_by_slug(p_data.slug)
+        if not existing_p:
+            continue
+        hints = p_data.extra_fields.get("credential_hints")
+        if hints and existing_p.extra_fields.get("credential_hints") != hints:
+            existing_p.extra_fields = {**existing_p.extra_fields, "credential_hints": hints}
+            p_repo.update(existing_p)
+
     existing = p_repo.list()
     if existing and not force:
         return
@@ -187,15 +197,7 @@ def seed(force: bool = False) -> None:
     provider_map: dict = {}
     for p_data in _PROVIDERS:
         existing_p = p_repo.get_by_slug(p_data.slug)
-        if existing_p:
-            # Always sync credential_hints so the UI can load env vars
-            hints = p_data.extra_fields.get("credential_hints")
-            if hints and existing_p.extra_fields.get("credential_hints") != hints:
-                existing_p.extra_fields = {**existing_p.extra_fields, "credential_hints": hints}
-                p_repo.update(existing_p)
-            p = existing_p
-        else:
-            p = p_repo.create(p_data)
+        p = existing_p if existing_p else p_repo.create(p_data)
         provider_map[p_data.slug] = p
 
     # Seed default credentials from environment variables (only if env var is set)
