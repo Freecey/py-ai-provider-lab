@@ -48,6 +48,7 @@ def _auto_register() -> None:
     try:
         from .minimax import MinimaxProvider
         register("minimax", MinimaxProvider)
+        register("minimax_cn", MinimaxProvider)
     except ImportError:
         logger.warning("minimax provider not available")
     try:

@@ -30,7 +30,7 @@ _PROVIDERS = [
     Provider(name="MiniMax (Global)", slug="minimax", active=True,
              base_url="https://api.minimax.io/v1", auth_type="api_key",
              notes="GroupId required — store it in the 'Organisation ID' field of your credential"),
-    Provider(name="MiniMax (CN)", slug="minimax", active=False,
+    Provider(name="MiniMax (CN)", slug="minimax_cn", active=False,
              base_url="https://api.minimax.chat/v1", auth_type="api_key",
              notes="China endpoint. GroupId required — store it in 'Organisation ID' of your credential"),
     Provider(name="Z.ai (GLM)", slug="zai", active=True,
@@ -134,20 +134,11 @@ def seed(force: bool = False) -> None:
     provider_map: dict = {}
     for p_data in _PROVIDERS:
         existing_p = p_repo.get_by_slug(p_data.slug)
-        # For duplicate slugs (minimax CN/global), match by name
-        if existing_p and existing_p.name == p_data.name:
-            p = existing_p
-        elif not existing_p:
-            p = p_repo.create(p_data)
-        else:
-            p = p_repo.create(p_data)
-        # Map by name for model insertion (slug may be shared)
-        provider_map[p_data.name] = p
-        # Also map by slug (last one wins, but models use name key anyway)
+        p = existing_p if existing_p else p_repo.create(p_data)
         provider_map[p_data.slug] = p
 
     # Insert Mock models
-    mock_provider = provider_map.get("mock") or provider_map.get("Mock")
+    mock_provider = provider_map.get("mock")
     if mock_provider:
         mock_models = [
             Model(provider_id=mock_provider.id, technical_name="mock-text-v1",
@@ -164,25 +155,18 @@ def seed(force: bool = False) -> None:
             m_repo.create(m)
 
     # Insert pre-seeded models for real providers
-    slug_to_name = {
-        "openai": "OpenAI",
-        "anthropic": "Anthropic",
-        "alibaba": "Alibaba DashScope (International)",
-        "minimax": "MiniMax (Global)",
-        "zai": "Z.ai (GLM)",
-        "openrouter": "OpenRouter",
-    }
-    for slug, prov_name in slug_to_name.items():
-        prov = provider_map.get(prov_name) or provider_map.get(slug)
+    for slug in ("openai", "anthropic", "alibaba", "minimax", "minimax_cn", "zai", "openrouter"):
+        prov = provider_map.get(slug)
         if not prov:
             continue
-        for m_data in _MODELS.get(slug, []):
+        model_key = "minimax" if slug == "minimax_cn" else slug
+        for m_data in _MODELS.get(model_key, []):
             caps = [ModelCapability(capability=c) for c in m_data.get("capabilities", [])]
             m_repo.create(Model(
                 provider_id=prov.id,
                 technical_name=m_data["technical_name"],
                 display_name=m_data["display_name"],
-                type=m_data["type"],
+                type=m_data.get("type", "text"),
                 active=True,
                 capabilities=caps,
             ))
