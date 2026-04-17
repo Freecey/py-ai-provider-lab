@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from app.config.settings import get_settings; s = get_settings\\(\\); print\\(s\\)\")",
+      "Bash(python3 -c \"from app.config.settings import get_settings; s = get_settings\\(\\); print\\(s\\)\")",
+      "Bash(python3 -c \"from app.config.settings import get_settings; print\\(get_settings\\(\\)\\)\")",
+      "Read(//usr/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Read(//home/coder/cedric/projects/idea-converter/.venv/bin/**)",
+      "Read(//home/coder/.pyenv/**)",
+      "Read(//home/coder/.local/**)",
+      "Read(//home/coder/.nix-profile/**)",
+      "Read(//nix/var/nix/profiles/default/**)",
+      "Bash(/home/coder/cedric/projects/idea-converter/.venv/bin/python3 --version)",
+      "Read(//home/coder/**)",
+      "Bash(xargs ls *)",
+      "Read(//opt/**)",
+      "Bash(/home/coder/cedric/projects/idea-converter/.venv/bin/python3 -c \"import sys; print\\(sys.version\\)\")",
+      "Read(//snap/**)",
+      "Bash(dpkg -l python3*)",
+      "Bash(dpkg -l)",
+      "Bash(apt list *)",
+      "Read(//home/cedric/.pyenv/**)",
+      "Read(//proc/**)",
+      "Bash(python3 -m py_compile /home/coder/cedric/.openclaw/workspace/projects/py-ai-provider-lab/app/ui/views/testlab.py)",
+      "Bash(python -m py_compile app/ui/views/testlab.py)",
+      "Bash(mkdir -p /home/coder/cedric/.openclaw/workspace/skills/py-ai-provider-lab)",
+      "Bash(cp /home/coder/cedric/.openclaw/workspace/projects/py-ai-provider-lab/skill/py-ai-provider-lab/SKILL.md /home/coder/cedric/.openclaw/workspace/skills/py-ai-provider-lab/SKILL.md)"
+    ]
+  }
+}

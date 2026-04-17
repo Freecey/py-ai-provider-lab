@@ -1,0 +1,14 @@
+APP_NAME = "py-ai-provider-lab"
+APP_VERSION = "0.1.0"
+
+DEFAULT_DATA_DIR = "./data"
+DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_THEME = "light"
+DEFAULT_LANG = "fr"
+DEFAULT_NETWORK_TIMEOUT = 30
+DEFAULT_SANDBOX_MODE = False
+
+DB_FILENAME = "app.db"
+LOG_FILENAME = "app.log"
+
+SECRET_MASK = "***"
