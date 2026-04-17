@@ -1,4 +1,5 @@
 """Initial seed data — run once after migrations."""
+import os
 from app.storage.db import get_conn
 from app.models.provider import Provider
 from app.models.credential import Credential
@@ -86,6 +87,20 @@ _MODELS = {
          "capabilities": ["chat", "streaming"]},
         {"technical_name": "abab6.5s", "display_name": "abab6.5s (200k ctx)", "type": "text",
          "capabilities": ["chat", "streaming", "tool_calling"]},
+        {"technical_name": "coding-plan-vlm", "display_name": "Coding Plan VLM", "type": "text",
+         "capabilities": ["chat", "vision", "streaming", "tool_calling"]},
+        {"technical_name": "coding-plan-search", "display_name": "Coding Plan Search", "type": "text",
+         "capabilities": ["chat", "streaming"]},
+        {"technical_name": "speech-02-hd", "display_name": "Text to Speech HD", "type": "audio",
+         "capabilities": ["speech"]},
+        {"technical_name": "music-2.6", "display_name": "Music 2.6", "type": "audio",
+         "capabilities": ["speech"]},
+        {"technical_name": "music-cover", "display_name": "Music Cover", "type": "audio",
+         "capabilities": ["speech"]},
+        {"technical_name": "lyrics_generation", "display_name": "Lyrics Generation", "type": "text",
+         "capabilities": ["chat"]},
+        {"technical_name": "image-01", "display_name": "Image-01", "type": "image",
+         "capabilities": ["image_gen"]},
         {"technical_name": "video-01", "display_name": "Video-01", "type": "video",
          "capabilities": ["video_gen"]},
     ],
@@ -111,6 +126,18 @@ _MODELS = {
     ],
 }
 
+# Default credentials seeded from environment variables.
+# Each entry: (provider_slug, credential_name, {field: env_var_name})
+_DEFAULT_CREDENTIALS: list[tuple[str, str, dict]] = [
+    ("openai",     "Default (env)",  {"api_key": "OPENAI_API_KEY", "org_id": "OPENAI_ORG_ID", "project_id": "OPENAI_PROJECT_ID"}),
+    ("anthropic",  "Default (env)",  {"api_key": "ANTHROPIC_API_KEY"}),
+    ("openrouter", "Default (env)",  {"api_key": "OPENROUTER_API_KEY"}),
+    ("alibaba",    "Default (env)",  {"api_key": "DASHSCOPE_API_KEY"}),
+    ("minimax",    "Default (env)",  {"api_key": "MINIMAX_API_KEY", "org_id": "MINIMAX_GROUP_ID"}),
+    ("minimax_cn", "Default (env)",  {"api_key": "MINIMAX_API_KEY", "org_id": "MINIMAX_GROUP_ID"}),
+    ("zai",        "Default (env)",  {"api_key": "ZAI_API_KEY"}),
+]
+
 _PROMPT_TEMPLATES = [
     ("Résumé", "Résume le texte suivant en 3 points clés :\n\n{texte}", "text", "general"),
     ("Extraction JSON", "Extrait les informations suivantes du texte sous forme JSON : {champs}\n\nTexte :\n{texte}", "text", "extraction"),
@@ -124,6 +151,7 @@ _PROMPT_TEMPLATES = [
 def seed(force: bool = False) -> None:
     conn = get_conn()
     p_repo = ProviderRepository(conn)
+    c_repo = CredentialRepository(conn)
     m_repo = ModelRepository(conn)
     t_repo = PromptTemplateRepository(conn)
 
@@ -136,6 +164,25 @@ def seed(force: bool = False) -> None:
         existing_p = p_repo.get_by_slug(p_data.slug)
         p = existing_p if existing_p else p_repo.create(p_data)
         provider_map[p_data.slug] = p
+
+    # Seed default credentials from environment variables (only if env var is set)
+    for slug, cred_name, field_map in _DEFAULT_CREDENTIALS:
+        prov = provider_map.get(slug)
+        if not prov:
+            continue
+        values = {field: os.environ.get(env_var, "") for field, env_var in field_map.items()}
+        if not any(values.values()):
+            continue
+        existing_creds = c_repo.list(provider_id=prov.id)
+        if any(c.name == cred_name for c in existing_creds):
+            continue
+        c_repo.create(Credential(
+            provider_id=prov.id,
+            name=cred_name,
+            active=True,
+            validity="untested",
+            **values,
+        ))
 
     # Insert Mock models
     mock_provider = provider_map.get("mock")

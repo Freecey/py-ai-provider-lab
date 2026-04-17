@@ -26,7 +26,10 @@
       "Bash(python -m py_compile app/ui/views/testlab.py)",
       "Bash(mkdir -p /home/coder/cedric/.openclaw/workspace/skills/py-ai-provider-lab)",
       "Bash(cp /home/coder/cedric/.openclaw/workspace/projects/py-ai-provider-lab/skill/py-ai-provider-lab/SKILL.md /home/coder/cedric/.openclaw/workspace/skills/py-ai-provider-lab/SKILL.md)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(python -m app --reseed)",
+      "Bash(python3 -m app --reseed)",
+      "Read(//usr/**)"
     ]
   }
 }
