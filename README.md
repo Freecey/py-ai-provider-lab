@@ -20,6 +20,11 @@ pip install -r requirements.txt
 python -m app.main
 ```
 
+### Réinitialiser les données de seed (providers, modèles par défaut)
+```bash
+python -m app.main --reseed
+```
+
 ### CLI
 ```bash
 python -m app.main --cli providers list

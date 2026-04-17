@@ -12,7 +12,7 @@ def main() -> int:
         from app.storage.db import get_db
         from app.storage.seed import seed
         get_db()
-        seed()
+        seed(force="--reseed" in sys.argv)
         from app.ui.app_window import AppWindow
         app = AppWindow()
         app.run()
